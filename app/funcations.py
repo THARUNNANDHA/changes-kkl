@@ -21,7 +21,7 @@ import pandas as pd
 from sqlalchemy.orm import aliased
 from .task import *
 scheduler = sched.scheduler(time.time, time.sleep)
-from sqlalchemy import create_engine, Column, Integer, String, DateTime, func, or_
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, func, or_,and_
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from . import mysql_engine,sqlite_engine
@@ -697,43 +697,189 @@ Base.prepare(mysql_engine, reflect=True)
 MySQLAttendance = Base.classes.Attendance
 
 from sqlalchemy.orm import Session
+# def fetch_and_store_data():
+#     SessionMySQL = sessionmaker(bind=mysql_engine)
+#     SessionSQLite = sessionmaker(bind=sqlite_engine)
+#     try:
+#         current_date = datetime.now().date()
+#         session_mysql = SessionMySQL()
+#         session_sqlite = SessionSQLite()
+
+#         mysql_data = session_mysql.query(MySQLAttendance).filter(
+#             or_(func.date(MySQLAttendance.inTime) == current_date, func.date(MySQLAttendance.outTime) == current_date)
+#         ).all()
+
+#         for record in mysql_data:
+#             existing_record = session_sqlite.query(Attendance).filter_by(
+#                 emp_id=record.emp_id, inTime=record.inTime, outTime=record.outTime
+#             ).first()
+
+#             if not existing_record:
+#                 print("\n\n\n\n\n row.emp_id:", record.emp_id)
+#                 print("row.inTime:", record.inTime)
+#                 print("row.outTime:", record.outTime)
+#                 sqlite_record = Attendance(
+#                             emp_id=record.emp_id,
+#                             inTime=record.inTime,
+#                             outTime=record.outTime,
+#                         )
+#                 session_sqlite.add(sqlite_record)
+#             else:
+#                 print("No existing record found for emp_id:", record.emp_id)
+
+#         session_mysql.close()
+        
+#         session_sqlite.commit()
+#         session_sqlite.close()
+
+#     except Exception as e:
+#         print("Exception:", e)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# correct code
+
+
+# def fetch_and_store_data():
+#     SessionMySQL = sessionmaker(bind=mysql_engine)
+#     SessionSQLite = sessionmaker(bind=sqlite_engine)
+#     try:
+#         current_date = datetime.now().date()
+#         session_mysql = SessionMySQL()
+#         session_sqlite = SessionSQLite()
+
+#         mysql_data = session_mysql.query(MySQLAttendance).filter(
+#             (func.date(MySQLAttendance.time) == current_date)
+#         ).all()
+
+#         for record in mysql_data:
+            
+#             existing_record = session_sqlite.query(Attendance).filter_by(
+#                 emp_id=record.emp_id
+                
+#             ).first()
+
+#             if not existing_record:
+#                 # If no existing record with emp_id, create a new record
+#                 if record.flag == 0:
+#                     # First instance, update inTime
+#                     sqlite_record = Attendance(
+#                         emp_id=record.emp_id,
+#                         inTime=record.time,
+#                         outTime=None,
+#                     )
+#                     session_sqlite.add(sqlite_record)
+#                 else:
+#                     # If flag is not 0, no action needed for now
+#                     print("Flag is not 0, skipping...")
+
+#             else:
+#                 # If existing record found, update outTime
+#                 if existing_record.inTime is None:
+#                     # If inTime is not set yet, update it
+#                     existing_record.inTime = record.time
+#                     session_sqlite.add(existing_record)
+#                 else:
+#                     # If inTime is already set, update outTime
+#                     existing_record.outTime = record.time
+#                     session_sqlite.add(existing_record)
+
+#         session_mysql.close()
+#         session_sqlite.commit()
+#         session_sqlite.close()
+
+#     except Exception as e:
+#         print("Exception:", e)
+
+
+
+
+
+
+
+
+
+
 def fetch_and_store_data():
     SessionMySQL = sessionmaker(bind=mysql_engine)
     SessionSQLite = sessionmaker(bind=sqlite_engine)
     try:
-        current_date = datetime.now().date()
+        # current_date = datetime.now().date()
+        current_date = (datetime.now() - timedelta(days=1)).date()
+        print("n\n\n\n\n\n\current date:", current_date)
         session_mysql = SessionMySQL()
         session_sqlite = SessionSQLite()
 
         mysql_data = session_mysql.query(MySQLAttendance).filter(
-            or_(func.date(MySQLAttendance.inTime) == current_date, func.date(MySQLAttendance.outTime) == current_date)
+            (func.date(MySQLAttendance.time) == current_date)
         ).all()
 
         for record in mysql_data:
-            existing_record = session_sqlite.query(Attendance).filter_by(
-                emp_id=record.emp_id, inTime=record.inTime, outTime=record.outTime
+            
+            existing_record = session_sqlite.query(Attendance).filter(
+                and_(Attendance.emp_id == record.emp_id, func.date(Attendance.inTime) == current_date)
             ).first()
+                
+            
 
             if not existing_record:
-                print("\n\n\n\n\n row.emp_id:", record.emp_id)
-                print("row.inTime:", record.inTime)
-                print("row.outTime:", record.outTime)
-                sqlite_record = Attendance(
-                            emp_id=record.emp_id,
-                            inTime=record.inTime,
-                            outTime=record.outTime,
-                        )
-                session_sqlite.add(sqlite_record)
+                # If no existing record with emp_id, create a new record
+                if record.flag == 0:
+                    # First instance, update inTime
+                    sqlite_record = Attendance(
+                        emp_id=record.emp_id,
+                        inTime=record.time,
+                        outTime=None,
+                    )
+                    session_sqlite.add(sqlite_record)
+                else:
+                    # If flag is not 0, no action needed for now
+                    print("Flag is not 0, skipping...")
+
             else:
-                print("No existing record found for emp_id:", record.emp_id)
+                # If existing record found, update outTime
+                if existing_record.inTime is None:
+                    # If inTime is not set yet, update it
+                    existing_record.inTime = record.time
+                    session_sqlite.add(existing_record)
+                else:
+                    # If inTime is already set, update outTime
+                    existing_record.outTime = record.time
+                    session_sqlite.add(existing_record)
 
         session_mysql.close()
-        
         session_sqlite.commit()
         session_sqlite.close()
 
     except Exception as e:
         print("Exception:", e)
+
+
 # def fetch_and_store_data():
 #     # SessionMySQL = sessionmaker(bind=mysql_engine)
 

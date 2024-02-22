@@ -56,8 +56,8 @@ def admin():
         # print(employee_attendance[0].id)
 
         for attend in employee_attendance:
-            attend.inTime=attend.inTime.strftime('%H:%M')
-            attend.outTime=attend.outTime.strftime('%H:%M')
+            attend.inTime=attend.inTime.strftime('%H:%M:%S')
+            attend.outTime=attend.outTime.strftime('%H:%M:%S')
         
     return render_template('admin.html',employee_data=employee_data,date=date,emp_login=emp_login, notification=notification, attendance=employee_attendance, late_permission=late_permission, leave_permission=leave_permission,emp_login_sorted=emp_login_sorted)
 
